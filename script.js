@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const scoreDisplay = document.getElementById("scoreDisplay");
   const timeDisplay = document.getElementById("timeDisplay");
   const playfield = document.getElementById("playfield");
+  const messageDisplay = document.getElementById("messageDisplay");
 
   // Налаштування складності: час на клік (мс) і розмір квадрата (px)
   const difficultySettings = {
@@ -12,6 +13,22 @@ document.addEventListener("DOMContentLoaded", function () {
     medium: { timeLimit: 1000, size: 40 },
     hard:   { timeLimit: 600,  size: 30 }
   };
+
+  const successMessages = [
+    "Nice! 🎯",
+    "Godlike reflexes 😈",
+    "Pixel is scared of you 😱",
+    "GG, ez click 😎",
+    "You’re built different 💪"
+  ];
+
+  const failMessages = [
+    "Pixel 1 : 0 You 💀",
+    "Too slow, my friend… 🐌",
+    "Did the pixel just dodge you? 😂",
+    "Alt+F4 рефлекси сьогодні 😅",
+    "Mouse: 1000 DPI, aim: 0% 🤡"
+  ];
 
   let gameActive = false;
   let pixelElement = null;
@@ -38,8 +55,18 @@ document.addEventListener("DOMContentLoaded", function () {
     startGame();
   });
 
+  // Клік по полю: якщо промахнулися повз квадрат — програш
+  playfield.addEventListener("click", function (e) {
+    if (!gameActive) return;
+
+    // Якщо клік був саме по квадрату, цим нехай займається обробник пікселя
+    if (e.target === pixelElement) return;
+
+    // Промах
+    endGame("Missed the pixel! ❌ " + getRandomItem(failMessages));
+  });
+
   function startGame() {
-    // Забороняємо зміну налаштувань під час гри
     startBtn.disabled = true;
     difficultySelect.disabled = true;
     colorSelect.disabled = true;
@@ -47,6 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
     gameActive = true;
     score = 0;
     updateScore();
+    showMessage("Game started! Try to keep up… 😏", "info");
 
     // Створюємо квадрат, якщо його ще немає
     if (!pixelElement) {
@@ -57,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
       pixelElement.addEventListener("click", handlePixelClick);
     }
 
-    // Задаємо колір квадрата
+    pixelElement.style.display = "block";
     pixelElement.style.backgroundColor = currentColor;
 
     startNewRound();
@@ -77,7 +105,6 @@ document.addEventListener("DOMContentLoaded", function () {
       clearInterval(timerId);
     }
 
-    // Кожні 100 мс оновлюємо час
     timerId = setInterval(function () {
       if (!gameActive) return;
       timeLeftMs -= 100;
@@ -87,7 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
         updateTimeDisplay();
         if (waitingForClick) {
           // Не встиг клікнути — програш
-          endGame();
+          endGame("Too late! ⏱ " + getRandomItem(failMessages));
         }
       } else {
         updateTimeDisplay();
@@ -115,17 +142,28 @@ document.addEventListener("DOMContentLoaded", function () {
     pixelElement.style.top = randomY + "px";
   }
 
-  function handlePixelClick() {
+  function handlePixelClick(event) {
     if (!gameActive || !waitingForClick) return;
+
+    // Щоб клік по квадрату не вважався промахом у обробнику поля
+    event.stopPropagation();
 
     waitingForClick = false;
 
-    // Нараховуємо бали (можна по-різному, тут: залишок часу / 100)
-    const gained = Math.max(1, Math.floor(timeLeftMs / 100));
+    // Нараховуємо бали: базово 1 + бонус за швидкість
+    // чим більше часу залишилось, тим більший бонус
+    const base = 1;
+    const bonus = Math.max(0, Math.floor(timeLeftMs / 150));
+    const gained = base + bonus;
+
     score += gained;
     updateScore();
 
-    // Починаємо новий раунд
+    showMessage(
+      getRandomItem(successMessages) + ` (+${gained} score)`,
+      "success"
+    );
+
     startNewRound();
   }
 
@@ -134,12 +172,13 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateTimeDisplay() {
-    // показуємо секунди з округленням до цілого
     const secondsLeft = Math.ceil(timeLeftMs / 1000);
     timeDisplay.textContent = "time left for click: " + secondsLeft;
   }
 
-  function endGame() {
+  function endGame(reasonText) {
+    if (!gameActive) return;
+
     gameActive = false;
     waitingForClick = false;
 
@@ -148,18 +187,36 @@ document.addEventListener("DOMContentLoaded", function () {
       timerId = null;
     }
 
-    // Ховаємо квадрат
     if (pixelElement) {
       pixelElement.style.display = "none";
     }
 
-    alert("You lost! Refresh the page to restart.");
+    showMessage(reasonText, "error");
+    alert(reasonText + "\nYou lost! Refresh the page to restart.");
     timeDisplay.textContent = "You lost! Refresh the page to restart.";
 
-    // Блокуємо все, як у відео (щоб реально треба було оновити сторінку)
     startBtn.disabled = true;
     difficultySelect.disabled = true;
     colorSelect.disabled = true;
   }
-});
 
+  function showMessage(text, type) {
+    messageDisplay.textContent = text;
+
+    switch (type) {
+      case "success":
+        messageDisplay.style.color = "green";
+        break;
+      case "error":
+        messageDisplay.style.color = "red";
+        break;
+      default:
+        messageDisplay.style.color = "black";
+    }
+  }
+
+  function getRandomItem(arr) {
+    const index = Math.floor(Math.random() * arr.length);
+    return arr[index];
+  }
+});
