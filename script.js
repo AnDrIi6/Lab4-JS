@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const timeDisplay = document.getElementById("timeDisplay");
   const playfield = document.getElementById("playfield");
 
-  // Налаштування складності
   const difficultySettings = {
     easy:   { timeLimit: 2000, size: 60 },
     medium: { timeLimit: 1400, size: 40 },
@@ -22,7 +21,6 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentColor = "red";
   let waitingForClick = false;
 
-  // старт
   startBtn.addEventListener("click", function () {
     const difficulty = difficultySelect.value;
     const color = colorSelect.value;
@@ -38,11 +36,9 @@ document.addEventListener("DOMContentLoaded", function () {
     startGame();
   });
 
-  // ❗ промах по полю = програш
   playfield.addEventListener("click", function (e) {
     if (!gameActive) return;
 
-    // якщо клік по квадрату — не рахуємо як промах
     if (e.target === pixelElement) return;
 
     endGame("You missed the pixel! Refresh to restart.");
