@@ -8,9 +8,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Налаштування складності
   const difficultySettings = {
-    easy:   { timeLimit: 1500, size: 60 },
-    medium: { timeLimit: 1000, size: 40 },
-    hard:   { timeLimit: 600,  size: 30 }
+    easy:   { timeLimit: 2000, size: 60 },
+    medium: { timeLimit: 1400, size: 40 },
+    hard:   { timeLimit: 800,  size: 30 }
   };
 
   let gameActive = false;
